@@ -10,7 +10,8 @@ const driverProfileSchema = new mongoose.Schema(
 
     licenseNumber: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
 
     aadhaarNumber: {
@@ -20,9 +21,9 @@ const driverProfileSchema = new mongoose.Schema(
 
     vehicleNumber: {
       type: String,
-      required: true
+      required: true,
+      unique: true
     },
-
     vehicleType: {
       type: String,
       enum: ["bike", "auto", "car"],
