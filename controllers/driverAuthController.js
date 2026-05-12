@@ -1,10 +1,11 @@
 const User = require("../models/user");
-const DriverProfile = require("../models/DriverProfile");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const DriverProfile = require("../models/DriverProfile");
+const authMiddleware = require("../middleware/authMiddleware")
 
 
-// DRIVER REGISTER
+// driver register
 const driverRegister = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
@@ -63,7 +64,7 @@ const driverRegister = async (req, res) => {
 
 
 
-// DRIVER LOGIN
+// driver login
 const driverLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -182,8 +183,97 @@ const driverLogin = async (req, res) => {
     });
   }
 };
+ // Complete the driver profile
+const completeDriverProfile = async (req, res) => {
+  try {
+    const {
+      licenseNumber,
+      aadhaarNumber,
+      vehicleNumber,
+      vehicleType,
+      vehicleModel,
+      vehicleColor
+    } = req.body;
+
+    if (
+      !licenseNumber ||
+      !aadhaarNumber ||
+      !vehicleNumber ||
+      !vehicleType ||
+      !vehicleModel
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "All required fields are mandatory"
+      });
+    }
+
+    // only driver allowed
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Access denied"
+      });
+    }
+
+    const existingProfile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (existingProfile) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Driver profile already completed"
+      });
+    }
+
+    const duplicateDriver = await DriverProfile.findOne({
+      $or: [
+        { licenseNumber },
+        { aadhaarNumber },
+        { vehicleNumber }
+      ]
+    });
+
+    if (duplicateDriver) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Driver details already exist"
+      });
+    }
+
+    const driverProfile = await DriverProfile.create({
+      userId: req.user._id,
+      licenseNumber,
+      aadhaarNumber,
+      vehicleNumber,
+      vehicleType,
+      vehicleModel,
+      vehicleColor
+    });
+
+    res.status(201).json({
+      success: true,
+      error: false,
+      message: "Driver profile completed successfully. Waiting for admin approval.",
+      data: driverProfile
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
   driverRegister,
-  driverLogin
+  driverLogin,
+  completeDriverProfile
 };
