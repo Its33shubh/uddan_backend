@@ -2,8 +2,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const connectDB = require('./config/db')
-const authRoutes = require("./routes/authRoutes");
 const riderRoutes = require("./routes/riderRoutes");
+const driverRoutes = require("./routes/driverRoutes");
 
 dotenv.config();
 
@@ -18,8 +18,8 @@ app.get("/", (req, res) => {
     res.send("Taxi Booking Backend Running...");
 });
 
-app.use("/api/auth", authRoutes);
 app.use("/api/rider", riderRoutes);
+app.use("/api/driver", driverRoutes);
 
 const PORT = process.env.PORT || 5000;
 

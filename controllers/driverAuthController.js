@@ -130,8 +130,8 @@ const driverLogin = async (req, res) => {
       return res.status(200).json({
         success: true,
         error: false,
-        profileCompleted: false,
         message: "Driver login successful. Complete your profile.",
+        profileCompleted: false,
         data: {
           token,
           user: {
