@@ -4,7 +4,7 @@ const cors = require("cors");
 const connectDB = require('./config/db')
 const riderRoutes = require("./routes/riderRoutes");
 const driverRoutes = require("./routes/driverRoutes");
-
+const adminRoutes = require("./routes/adminRoutes")
 dotenv.config();
 
 connectDB()
@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/rider", riderRoutes);
 app.use("/api/driver", driverRoutes);
+app.use("/api/admin",adminRoutes)
 
 const PORT = process.env.PORT || 5000;
 
