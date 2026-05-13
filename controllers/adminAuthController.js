@@ -176,8 +176,46 @@ const getPendingDrivers = async (req, res) => {
   }
 };
 
+// approve the driver 
+const approveDriver = async (req, res) => {
+    try {
+      const { driverId } = req.params;
+  
+      const driverProfile = await DriverProfile.findById(driverId);
+  
+      if (!driverProfile) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Driver profile not found"
+        });
+      }
+  
+      driverProfile.isApproved = true;
+      driverProfile.approvalStatus = "approved";
+      driverProfile.rejectionReason = "";
+  
+      await driverProfile.save();
+  
+      res.status(200).json({
+        success: true,
+        error: false,
+        message: "Driver approved successfully",
+        data: driverProfile
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: true,
+        message: error.message
+      });
+    }
+  };
+
 module.exports = {
     adminRegister,
     adminLogin,
-    getPendingDrivers
+    getPendingDrivers,
+    approveDriver
 };
