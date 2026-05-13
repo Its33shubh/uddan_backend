@@ -211,11 +211,57 @@ const approveDriver = async (req, res) => {
         message: error.message
       });
     }
-  };
+};
 
+//reject the driver 
+const rejectDriver = async (req, res) => {
+    try {
+      const { driverId } = req.params;
+      const { rejectionReason } = req.body;
+  
+      if (!rejectionReason) {
+        return res.status(400).json({
+          success: false,
+          error: true,
+          message: "Rejection reason is required"
+        });
+      }
+  
+      const driverProfile = await DriverProfile.findById(driverId);
+  
+      if (!driverProfile) {
+        return res.status(404).json({
+          success: false,
+          error: true,
+          message: "Driver profile not found"
+        });
+      }
+  
+      driverProfile.isApproved = false;
+      driverProfile.approvalStatus = "rejected";
+      driverProfile.rejectionReason = rejectionReason;
+  
+      await driverProfile.save();
+  
+      res.status(200).json({
+        success: true,
+        error: false,
+        message: "Driver rejected successfully",
+        data: driverProfile
+      });
+  
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: true,
+        message: error.message
+      });
+    }
+};
 module.exports = {
     adminRegister,
     adminLogin,
     getPendingDrivers,
-    approveDriver
+    approveDriver,
+    rejectDriver
 };
