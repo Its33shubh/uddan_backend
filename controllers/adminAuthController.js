@@ -1,7 +1,7 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const DriverProfile = require("../models/DriverProfile");
 
 // ADMIN REGISTER
 const adminRegister = async (req, res) => {
@@ -69,8 +69,6 @@ const adminRegister = async (req, res) => {
         });
     }
 };
-
-
 
 // ADMIN LOGIN
 const adminLogin = async (req, res) => {
@@ -155,7 +153,31 @@ const adminLogin = async (req, res) => {
     }
 };
 
+// get pending driver
+const getPendingDrivers = async (req, res) => {
+  try {
+    const pendingDrivers = await DriverProfile.find({
+      approvalStatus: "pending"
+    }).populate("userId", "name email phone profileImage");
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Pending drivers fetched successfully",
+      data: pendingDrivers
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
     adminRegister,
-    adminLogin
+    adminLogin,
+    getPendingDrivers
 };
