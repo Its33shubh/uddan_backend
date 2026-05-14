@@ -146,9 +146,70 @@ const getCurrentRide = async (req, res) => {
   }
 };
 
+// cancel ride
+const cancelRide = async (req, res) => {
+  try {
+    const { rideId } = req.params;
+    const { cancelReason } = req.body;
+
+    if (req.user.role !== "rider") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only riders can cancel rides"
+      });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Ride not found"
+      });
+    }
+
+    if (ride.riderId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "This ride does not belong to you"
+      });
+    }
+
+    if (!["requested", "accepted"].includes(ride.rideStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Ride cannot be cancelled now"
+      });
+    }
+
+    ride.rideStatus = "cancelled";
+    ride.cancelReason = cancelReason || "Cancelled by rider";
+
+    await ride.save();
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Ride cancelled successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
   bookRide,
   getRideHistory,
-  getCurrentRide
+  getCurrentRide,
+  cancelRide
 };
