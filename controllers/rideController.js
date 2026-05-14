@@ -69,6 +69,40 @@ const bookRide = async (req, res) => {
   }
 };
 
+// get ride history
+const getRideHistory = async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only riders can access ride history"
+      });
+    }
+
+    const rides = await Ride.find({
+      riderId: req.user._id
+    })
+      .populate("driverId", "name phone profileImage")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Ride history fetched successfully",
+      data: rides
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
-  bookRide
+  bookRide,
+  getRideHistory,
 };
