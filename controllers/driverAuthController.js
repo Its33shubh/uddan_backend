@@ -440,11 +440,87 @@ const startRide = async (req, res) => {
   }
 };
 
+//complete ride
+const completeRide = async (req, res) => {
+  try {
+    const { rideId } = req.params;
+
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can complete rides"
+      });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Ride not found"
+      });
+    }
+
+    if (ride.driverId?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "This ride is not assigned to you"
+      });
+    }
+
+    if (ride.rideStatus !== "started") {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Only started rides can be completed"
+      });
+    }
+
+    ride.rideStatus = "completed";
+
+    if (ride.paymentMethod === "cash") {
+      ride.paymentStatus = "paid";
+    }
+
+    await ride.save();
+
+    // update driver stats
+    const driverProfile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (driverProfile) {
+      driverProfile.totalRides += 1;
+      driverProfile.earnings += ride.fare;
+
+      await driverProfile.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Ride completed successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   driverRegister,
   driverLogin,
   completeDriverProfile,
   getAvailableRides,
   acceptRide,
-  startRide
+  startRide,
+  completeRide
 };
