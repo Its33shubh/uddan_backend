@@ -381,10 +381,70 @@ const acceptRide = async (req, res) => {
   }
 };
 
+// start rides 
+const startRide = async (req, res) => {
+  try {
+    const { rideId } = req.params;
+
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can start rides"
+      });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Ride not found"
+      });
+    }
+
+    if (ride.driverId?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "This ride is not assigned to you"
+      });
+    }
+
+    if (ride.rideStatus !== "accepted") {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Only accepted rides can be started"
+      });
+    }
+
+    ride.rideStatus = "started";
+
+    await ride.save();
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Ride started successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   driverRegister,
   driverLogin,
   completeDriverProfile,
   getAvailableRides,
-  acceptRide
+  acceptRide,
+  startRide
 };
