@@ -1,13 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const {
-  driverRegister,
-  driverLogin,
-  completeDriverProfile,
-  getAvailableRides,
-  acceptRide
-} = require("../controllers/driverAuthController");
+const { driverRegister,driverLogin,completeDriverProfile,getAvailableRides,acceptRide} = require("../controllers/driverAuthController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/register", driverRegister);

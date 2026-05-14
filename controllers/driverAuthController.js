@@ -63,8 +63,6 @@ const driverRegister = async (req, res) => {
   }
 };
 
-
-
 // driver login
 const driverLogin = async (req, res) => {
   try {
