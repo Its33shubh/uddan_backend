@@ -102,7 +102,53 @@ const getRideHistory = async (req, res) => {
   }
 };
 
+//get current ride
+const getCurrentRide = async (req, res) => {
+  try {
+    if (req.user.role !== "rider") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only riders can access current ride"
+      });
+    }
+
+    const ride = await Ride.findOne({
+      riderId: req.user._id,
+      rideStatus: {
+        $in: ["requested", "accepted", "started"]
+      }
+    })
+      .populate("driverId", "name phone profileImage")
+      .sort({ createdAt: -1 });
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "No active ride found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Current ride fetched successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
+
 module.exports = {
   bookRide,
   getRideHistory,
+  getCurrentRide
 };
