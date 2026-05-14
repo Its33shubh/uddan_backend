@@ -4,12 +4,16 @@ const router = express.Router();
 const {
   driverRegister,
   driverLogin,
-  completeDriverProfile
+  completeDriverProfile,
+  getAvailableRides,
+  acceptRide
 } = require("../controllers/driverAuthController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/register", driverRegister);
 router.post("/login", driverLogin);
 router.post("/complete-profile",authMiddleware,completeDriverProfile)
+router.get("/available-rides", authMiddleware, getAvailableRides);
+router.put("/accept-ride/:rideId", authMiddleware, acceptRide);
 
 module.exports = router;

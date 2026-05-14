@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const DriverProfile = require("../models/DriverProfile");
 const authMiddleware = require("../middleware/authMiddleware")
+const Ride = require("../models/Ride");
 
 
 // driver register
@@ -272,8 +273,120 @@ const completeDriverProfile = async (req, res) => {
   }
 };
 
+// get available ride
+const getAvailableRides = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can access available rides"
+      });
+    }
+
+    const driverProfile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (!driverProfile || !driverProfile.isApproved) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Driver not approved"
+      });
+    }
+
+    const rides = await Ride.find({
+      rideStatus: "requested",
+      driverId: null
+    })
+      .populate("riderId", "name phone")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Available rides fetched successfully",
+      data: rides
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
+// accept rides 
+const acceptRide = async (req, res) => {
+  try {
+    const { rideId } = req.params;
+
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can accept rides"
+      });
+    }
+
+    const driverProfile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (!driverProfile || !driverProfile.isApproved) {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Driver not approved"
+      });
+    }
+
+    const ride = await Ride.findById(rideId);
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Ride not found"
+      });
+    }
+
+    if (ride.rideStatus !== "requested") {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "Ride already accepted or unavailable"
+      });
+    }
+
+    ride.driverId = req.user._id;
+    ride.rideStatus = "accepted";
+
+    await ride.save();
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Ride accepted successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   driverRegister,
   driverLogin,
-  completeDriverProfile
+  completeDriverProfile,
+  getAvailableRides,
+  acceptRide
 };
