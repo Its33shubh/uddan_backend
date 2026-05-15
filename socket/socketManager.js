@@ -1,5 +1,7 @@
 let io;
+
 const onlineDrivers = {};
+const onlineRiders = {};
 
 const setSocketIO = (socketInstance) => {
   io = socketInstance;
@@ -12,5 +14,6 @@ const getSocketIO = () => {
 module.exports = {
   setSocketIO,
   getSocketIO,
-  onlineDrivers
+  onlineDrivers,
+  onlineRiders
 };
