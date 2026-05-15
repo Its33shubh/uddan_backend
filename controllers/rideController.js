@@ -1,7 +1,10 @@
 const Ride = require("../models/Ride");
 
+const {
+  getSocketIO,
+  onlineDrivers
+} = require("../socket/socketManager");
 
-// BOOK RIDE
 const bookRide = async (req, res) => {
   try {
     const {
@@ -15,24 +18,24 @@ const bookRide = async (req, res) => {
     } = req.body;
 
     if (
-        !pickupLocation?.address ||
-        !pickupLocation?.lat ||
-        !pickupLocation?.lng ||
-        !dropLocation?.address ||
-        !dropLocation?.lat ||
-        !dropLocation?.lng ||
-        !vehicleType ||
-        !fare ||
-        !distance ||
-        !duration ||
-        !paymentMethod
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: true,
-          message: "All required ride fields are mandatory"
-        });
-      }
+      !pickupLocation?.address ||
+      pickupLocation?.lat == null ||
+      pickupLocation?.lng == null ||
+      !dropLocation?.address ||
+      dropLocation?.lat == null ||
+      dropLocation?.lng == null ||
+      !vehicleType ||
+      fare == null ||
+      distance == null ||
+      duration == null ||
+      !paymentMethod
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: true,
+        message: "All required ride fields are mandatory"
+      });
+    }
 
     if (req.user.role !== "rider") {
       return res.status(403).json({
@@ -51,6 +54,15 @@ const bookRide = async (req, res) => {
       distance,
       duration,
       paymentMethod
+    });
+
+    const io = getSocketIO();
+
+    Object.values(onlineDrivers).forEach((socketId) => {
+      io.to(socketId).emit("new_ride_request", {
+        message: "New ride request",
+        ride
+      });
     });
 
     res.status(201).json({
