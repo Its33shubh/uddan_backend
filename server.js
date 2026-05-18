@@ -51,9 +51,21 @@ io.on("connection", (socket) => {
   console.log("Socket Connected:", socket.id);
 
   socket.on("driver_online", (data) => {
-    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+    let parsedData;
+
+    try {
+      parsedData =
+        typeof data === "string" ? JSON.parse(data) : data;
+    } catch {
+      return;
+    }
 
     const driverId = parsedData.driverId;
+
+    if (!driverId) {
+      console.log("Driver ID required");
+      return;
+    }
 
     onlineDrivers[driverId] = socket.id;
 
@@ -61,9 +73,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("rider_online", (data) => {
-    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+    let parsedData;
+
+    try {
+      parsedData =
+        typeof data === "string" ? JSON.parse(data) : data;
+    } catch {
+      return;
+    }
 
     const riderId = parsedData.riderId;
+    if (!riderId) {
+      console.log("Rider ID required");
+      return;
+    }
 
     onlineRiders[riderId] = socket.id;
 
@@ -71,15 +94,32 @@ io.on("connection", (socket) => {
   });
   socket.on("accept_ride", async (data) => {
     try {
-      const parsedData =
-        typeof data === "string" ? JSON.parse(data) : data;
+      let parsedData;
+
+      try {
+        parsedData =
+          typeof data === "string" ? JSON.parse(data) : data;
+      } catch {
+        console.log("Invalid socket payload");
+        return;
+      }
 
       const { rideId, driverId } = parsedData;
+
+      if (!rideId || !driverId) {
+        console.log("Missing required data");
+        return;
+      }
 
       const ride = await Ride.findById(rideId);
 
       if (!ride) {
         console.log("Ride not found");
+        return;
+      }
+
+      if (ride.rideStatus !== "requested") {
+        console.log("Ride already accepted");
         return;
       }
 
@@ -103,12 +143,26 @@ io.on("connection", (socket) => {
       console.log(error.message);
     }
   });
+
+
   socket.on("start_ride", async (data) => {
     try {
-      const parsedData =
-        typeof data === "string" ? JSON.parse(data) : data;
+      let parsedData;
+
+      try {
+        parsedData =
+          typeof data === "string" ? JSON.parse(data) : data;
+      } catch {
+        console.log("Invalid socket payload");
+        return;
+      }
 
       const { rideId, driverId } = parsedData;
+
+      if (!rideId || !driverId) {
+        console.log("Missing required data");
+        return;
+      }
 
       const ride = await Ride.findById(rideId);
 
@@ -119,6 +173,10 @@ io.on("connection", (socket) => {
 
       if (ride.driverId.toString() !== driverId) {
         console.log("Unauthorized driver");
+        return;
+      }
+      if (ride.rideStatus !== "accepted") {
+        console.log("Ride must be accepted first");
         return;
       }
 
@@ -136,6 +194,61 @@ io.on("connection", (socket) => {
       }
 
       console.log("Ride started:", ride._id);
+
+    } catch (error) {
+      console.log(error.message);
+    }
+  });
+
+  socket.on("complete_ride", async (data) => {
+    try {
+      let parsedData;
+
+      try {
+        parsedData =
+          typeof data === "string" ? JSON.parse(data) : data;
+      } catch {
+        console.log("Invalid socket payload");
+        return;
+      }
+
+      const { rideId, driverId } = parsedData;
+
+      if (!rideId || !driverId) {
+        console.log("Missing required data");
+        return;
+      }
+
+      const ride = await Ride.findById(rideId);
+
+      if (!ride) {
+        console.log("Ride not found");
+        return;
+      }
+
+      if (ride.driverId.toString() !== driverId) {
+        console.log("Unauthorized driver");
+        return;
+      }
+      if (ride.rideStatus !== "started") {
+        console.log("Ride must be started first");
+        return;
+      }
+
+      ride.rideStatus = "completed";
+
+      await ride.save();
+
+      const riderSocketId = onlineRiders[ride.riderId.toString()];
+
+      if (riderSocketId) {
+        io.to(riderSocketId).emit("ride_completed", {
+          message: "Your ride has been completed",
+          ride
+        });
+      }
+
+      console.log("Ride completed:", ride._id);
 
     } catch (error) {
       console.log(error.message);
