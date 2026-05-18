@@ -7,10 +7,10 @@ const { Server } = require("socket.io");
 const connectDB = require("./config/db");
 
 const {
-    setSocketIO,
-    onlineDrivers,
-    onlineRiders
-  } = require("./socket/socketManager");
+  setSocketIO,
+  onlineDrivers,
+  onlineRiders
+} = require("./socket/socketManager");
 
 const riderRoutes = require("./routes/riderRoutes");
 const driverRoutes = require("./routes/driverRoutes");
@@ -48,81 +48,119 @@ const io = new Server(server, {
 setSocketIO(io);
 
 io.on("connection", (socket) => {
-    console.log("Socket Connected:", socket.id);
-  
-    socket.on("driver_online", (data) => {
-        const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-      
-        const driverId = parsedData.driverId;
-      
-        onlineDrivers[driverId] = socket.id;
-      
-        console.log("Online Drivers:", onlineDrivers);
-      });
-      
-      socket.on("rider_online", (data) => {
-        const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-      
-        const riderId = parsedData.riderId;
-      
-        onlineRiders[riderId] = socket.id;
-      
-        console.log("Online Riders:", onlineRiders);
-      });
-      socket.on("accept_ride", async (data) => {
-        try {
-          const parsedData =
-            typeof data === "string" ? JSON.parse(data) : data;
-      
-          const { rideId, driverId } = parsedData;
-      
-          const ride = await Ride.findById(rideId);
-      
-          if (!ride) {
-            console.log("Ride not found");
-            return;
-          }
-      
-          ride.driverId = driverId;
-          ride.rideStatus = "accepted";
-      
-          await ride.save();
-      
-          const riderSocketId = onlineRiders[ride.riderId.toString()];
-      
-          if (riderSocketId) {
-            io.to(riderSocketId).emit("ride_accepted", {
-              message: "Driver accepted your ride",
-              ride
-            });
-          }
-      
-          console.log("Ride accepted:", ride._id);
-      
-        } catch (error) {
-          console.log(error.message);
-        }
-      });
-    socket.on("disconnect", () => {
-      // remove drivers
-      for (let driverId in onlineDrivers) {
-        if (onlineDrivers[driverId] === socket.id) {
-          delete onlineDrivers[driverId];
-        }
-      }
-  
-      // remove riders
-      for (let riderId in onlineRiders) {
-        if (onlineRiders[riderId] === socket.id) {
-          delete onlineRiders[riderId];
-        }
-      }
-  
-      console.log("Socket Disconnected:", socket.id);
-      console.log("Online Drivers:", onlineDrivers);
-      console.log("Online Riders:", onlineRiders);
-    });
+  console.log("Socket Connected:", socket.id);
+
+  socket.on("driver_online", (data) => {
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+
+    const driverId = parsedData.driverId;
+
+    onlineDrivers[driverId] = socket.id;
+
+    console.log("Online Drivers:", onlineDrivers);
   });
+
+  socket.on("rider_online", (data) => {
+    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+
+    const riderId = parsedData.riderId;
+
+    onlineRiders[riderId] = socket.id;
+
+    console.log("Online Riders:", onlineRiders);
+  });
+  socket.on("accept_ride", async (data) => {
+    try {
+      const parsedData =
+        typeof data === "string" ? JSON.parse(data) : data;
+
+      const { rideId, driverId } = parsedData;
+
+      const ride = await Ride.findById(rideId);
+
+      if (!ride) {
+        console.log("Ride not found");
+        return;
+      }
+
+      ride.driverId = driverId;
+      ride.rideStatus = "accepted";
+
+      await ride.save();
+
+      const riderSocketId = onlineRiders[ride.riderId.toString()];
+
+      if (riderSocketId) {
+        io.to(riderSocketId).emit("ride_accepted", {
+          message: "Driver accepted your ride",
+          ride
+        });
+      }
+
+      console.log("Ride accepted:", ride._id);
+
+    } catch (error) {
+      console.log(error.message);
+    }
+  });
+  socket.on("start_ride", async (data) => {
+    try {
+      const parsedData =
+        typeof data === "string" ? JSON.parse(data) : data;
+
+      const { rideId, driverId } = parsedData;
+
+      const ride = await Ride.findById(rideId);
+
+      if (!ride) {
+        console.log("Ride not found");
+        return;
+      }
+
+      if (ride.driverId.toString() !== driverId) {
+        console.log("Unauthorized driver");
+        return;
+      }
+
+      ride.rideStatus = "started";
+
+      await ride.save();
+
+      const riderSocketId = onlineRiders[ride.riderId.toString()];
+
+      if (riderSocketId) {
+        io.to(riderSocketId).emit("ride_started", {
+          message: "Your ride has started",
+          ride
+        });
+      }
+
+      console.log("Ride started:", ride._id);
+
+    } catch (error) {
+      console.log(error.message);
+    }
+  });
+  socket.on("disconnect", () => {
+    // remove drivers
+    for (let driverId in onlineDrivers) {
+      if (onlineDrivers[driverId] === socket.id) {
+        delete onlineDrivers[driverId];
+      }
+    }
+
+    // remove riders
+    for (let riderId in onlineRiders) {
+      if (onlineRiders[riderId] === socket.id) {
+        delete onlineRiders[riderId];
+      }
+    }
+
+    console.log("Socket Disconnected:", socket.id);
+    console.log("Online Drivers:", onlineDrivers);
+    console.log("Online Riders:", onlineRiders);
+  });
+});
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
