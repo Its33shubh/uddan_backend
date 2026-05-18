@@ -16,6 +16,7 @@ const riderRoutes = require("./routes/riderRoutes");
 const driverRoutes = require("./routes/driverRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const rideRoutes = require("./routes/rideRoutes");
+const driverProfileRoutes = require("./routes/driverProfileRoutes");
 const Ride = require("./models/Ride");
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/api/rider", riderRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/driver-profile", driverProfileRoutes);
 app.use("/api/rides", rideRoutes);
 
 const server = http.createServer(app);
