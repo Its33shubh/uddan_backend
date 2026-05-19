@@ -5,7 +5,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 const {
-  uploadDocuments,getDocuments
+  uploadDocuments,getDocuments,updateDocuments
 } = require("../controllers/driverProfileController");
 
 router.post(
@@ -24,6 +24,18 @@ router.get(
   "/documents",
   authMiddleware,
   getDocuments
+);
+
+router.patch(
+  "/update-documents",
+  authMiddleware,
+  upload.fields([
+    { name: "licenseImage", maxCount: 1 },
+    { name: "aadhaarImage", maxCount: 1 },
+    { name: "rcImage", maxCount: 1 },
+    { name: "insuranceImage", maxCount: 1 }
+  ]),
+  updateDocuments
 );
 
 module.exports = router;
