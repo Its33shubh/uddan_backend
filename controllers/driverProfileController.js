@@ -197,10 +197,83 @@ const getDriverProfile = async (req, res) => {
     });
   }
 };
+const updateDriverProfile = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can update profile"
+      });
+    }
+
+    const {
+      vehicleModel,
+      vehicleColor,
+      vehicleType,
+      vehicleNumber,
+      licenseNumber,
+      aadhaarNumber
+    } = req.body;
+
+    const profile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Driver profile not found"
+      });
+    }
+
+    if (vehicleModel) {
+      profile.vehicleModel = vehicleModel;
+    }
+
+    if (vehicleColor) {
+      profile.vehicleColor = vehicleColor;
+    }
+
+    if (vehicleType) {
+      profile.vehicleType = vehicleType;
+    }
+
+    if (vehicleNumber) {
+      profile.vehicleNumber = vehicleNumber;
+    }
+
+    if (licenseNumber) {
+      profile.licenseNumber = licenseNumber;
+    }
+
+    if (aadhaarNumber) {
+      profile.aadhaarNumber = aadhaarNumber;
+    }
+
+    await profile.save();
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Driver profile updated successfully",
+      data: profile
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
   uploadDocuments,
   getDocuments,
   updateDocuments,
-  getDriverProfile
+  getDriverProfile,
+  updateDriverProfile
 };
