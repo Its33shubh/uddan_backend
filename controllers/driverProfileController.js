@@ -157,9 +157,50 @@ const updateDocuments = async (req, res) => {
     });
   }
 };
+const getDriverProfile = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can access profile"
+      });
+    }
+
+    const profile = await DriverProfile.findOne({
+      userId: req.user._id
+    }).populate(
+      "userId",
+      "name email phone profileImage"
+    );
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Driver profile not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Driver profile fetched successfully",
+      data: profile
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
   uploadDocuments,
   getDocuments,
-  updateDocuments
+  updateDocuments,
+  getDriverProfile
 };

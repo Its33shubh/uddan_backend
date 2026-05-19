@@ -5,7 +5,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 const {
-  uploadDocuments,getDocuments,updateDocuments
+  uploadDocuments,getDocuments,updateDocuments,getDriverProfile
 } = require("../controllers/driverProfileController");
 
 router.post(
@@ -24,6 +24,12 @@ router.get(
   "/documents",
   authMiddleware,
   getDocuments
+);
+
+router.get(
+  "/profile",
+  authMiddleware,
+  getDriverProfile
 );
 
 router.patch(
