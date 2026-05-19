@@ -5,7 +5,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
 const {
-  uploadDocuments
+  uploadDocuments,getDocuments
 } = require("../controllers/driverProfileController");
 
 router.post(
@@ -18,6 +18,12 @@ router.post(
     { name: "insuranceImage", maxCount: 1 }
   ]),
   uploadDocuments
+);
+
+router.get(
+  "/documents",
+  authMiddleware,
+  getDocuments
 );
 
 module.exports = router;

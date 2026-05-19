@@ -61,7 +61,45 @@ const uploadDocuments = async (req, res) => {
     });
   }
 };
+const getDocuments = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can view documents"
+      });
+    }
+
+    const profile = await DriverProfile.findOne({
+      userId: req.user._id
+    });
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "Driver profile not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Documents fetched successfully",
+      data: profile.documents
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
-  uploadDocuments
+  uploadDocuments,
+  getDocuments
 };
