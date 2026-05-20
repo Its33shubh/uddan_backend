@@ -515,6 +515,49 @@ const completeRide = async (req, res) => {
   }
 };
 
+const getCurrentRide = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can access current ride"
+      });
+    }
+
+    const ride = await Ride.findOne({
+      driverId: req.user._id,
+      rideStatus: {
+        $in: ["accepted", "arrived", "started"]
+      }
+    })
+      .populate("riderId", "name phone profileImage")
+      .sort({ createdAt: -1 });
+
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        error: true,
+        message: "No active ride found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Current ride fetched successfully",
+      data: ride
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   driverRegister,
   driverLogin,
@@ -522,5 +565,6 @@ module.exports = {
   getAvailableRides,
   acceptRide,
   startRide,
-  completeRide
+  completeRide,
+  getCurrentRide
 };

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const { driverRegister,driverLogin,completeDriverProfile,getAvailableRides,acceptRide,startRide,completeRide } = require("../controllers/driverAuthController");
+const { driverRegister,driverLogin,completeDriverProfile,getAvailableRides,acceptRide,startRide,completeRide,getCurrentRide } = require("../controllers/driverAuthController");
 const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/register", driverRegister);
@@ -13,5 +13,6 @@ router.get("/available-rides", authMiddleware, getAvailableRides);
 router.patch("/accept-ride/:rideId", authMiddleware, acceptRide);
 router.patch("/start-ride/:rideId", authMiddleware, startRide);
 router.patch("/complete-ride/:rideId", authMiddleware, completeRide);
+router.get("/current-ride", authMiddleware, getCurrentRide);
 
 module.exports = router;
