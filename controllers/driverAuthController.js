@@ -557,6 +557,40 @@ const getCurrentRide = async (req, res) => {
     });
   }
 };
+const getRideHistory = async (req, res) => {
+  try {
+    if (req.user.role !== "driver") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Only drivers can access ride history"
+      });
+    }
+
+    const rides = await Ride.find({
+      driverId: req.user._id,
+      rideStatus: {
+        $in: ["completed", "cancelled"]
+      }
+    })
+      .populate("riderId", "name phone profileImage")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Driver ride history fetched successfully",
+      data: rides
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
   driverRegister,
@@ -566,5 +600,6 @@ module.exports = {
   acceptRide,
   startRide,
   completeRide,
-  getCurrentRide
+  getCurrentRide,
+  getRideHistory
 };
