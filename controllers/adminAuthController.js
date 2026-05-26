@@ -320,11 +320,44 @@ const getDashboardStats = async (req, res) => {
     });
   }
 };
+//get all driver
+const getAllDrivers = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Access denied. Admin only"
+      });
+    }
+
+    const drivers = await DriverProfile.find()
+      .populate("userId", "name email phone profileImage isBlocked")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "All drivers fetched successfully",
+      data: drivers
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
+
+
 module.exports = {
     adminRegister,
     adminLogin,
     getPendingDrivers,
     approveDriver,
     rejectDriver,
-    getDashboardStats
+    getDashboardStats,
+    getAllDrivers
 };
