@@ -351,6 +351,36 @@ const getAllDrivers = async (req, res) => {
   }
 };
 
+//get all rider
+const getAllRiders = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Access denied. Admin only"
+      });
+    }
+
+    const riders = await User.find({
+      role: "rider"
+    }).select("-password").sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "All riders fetched successfully",
+      data: riders
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 
 module.exports = {
     adminRegister,
@@ -359,5 +389,6 @@ module.exports = {
     approveDriver,
     rejectDriver,
     getDashboardStats,
-    getAllDrivers
+    getAllDrivers,
+    getAllRiders
 };
