@@ -6,7 +6,8 @@ const {
   adminLogin,
   getPendingDrivers,
   approveDriver,
-  rejectDriver
+  rejectDriver,
+  getDashboardStats
 } = require("../controllers/adminAuthController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -17,4 +18,5 @@ router.post("/login", adminLogin);
 router.get("/pending-drivers",authMiddleware,adminMiddleware,getPendingDrivers);
 router.put("/approve-driver/:driverId",authMiddleware,adminMiddleware,approveDriver);
 router.put("/reject-driver/:driverId",authMiddleware,adminMiddleware,rejectDriver);
+router.get("/dashboard-stats", authMiddleware, getDashboardStats);
 module.exports = router;

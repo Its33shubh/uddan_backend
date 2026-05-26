@@ -2,6 +2,7 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const DriverProfile = require("../models/DriverProfile");
+const Ride = require("../models/Ride");
 
 // ADMIN REGISTER
 const adminRegister = async (req, res) => {
@@ -258,10 +259,72 @@ const rejectDriver = async (req, res) => {
       });
     }
 };
+
+//getDashboardStats 
+const getDashboardStats = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: true,
+        message: "Access denied. Admin only"
+      });
+    }
+
+    const totalRiders = await User.countDocuments({
+      role: "rider"
+    });
+
+    const totalDrivers = await User.countDocuments({
+      role: "driver"
+    });
+
+    const pendingDrivers = await DriverProfile.countDocuments({
+      approvalStatus: "pending"
+    });
+
+    const approvedDrivers = await DriverProfile.countDocuments({
+      approvalStatus: "approved"
+    });
+
+    const totalRides = await Ride.countDocuments();
+
+    const completedRides = await Ride.countDocuments({
+      rideStatus: "completed"
+    });
+
+    const cancelledRides = await Ride.countDocuments({
+      rideStatus: "cancelled"
+    });
+
+    res.status(200).json({
+      success: true,
+      error: false,
+      message: "Dashboard stats fetched successfully",
+      data: {
+        totalRiders,
+        totalDrivers,
+        pendingDrivers,
+        approvedDrivers,
+        totalRides,
+        completedRides,
+        cancelledRides
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: true,
+      message: error.message
+    });
+  }
+};
 module.exports = {
     adminRegister,
     adminLogin,
     getPendingDrivers,
     approveDriver,
-    rejectDriver
+    rejectDriver,
+    getDashboardStats
 };
